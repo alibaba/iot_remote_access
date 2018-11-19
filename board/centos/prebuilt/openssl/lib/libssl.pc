@@ -1,0 +1,12 @@
+prefix=/chunk/wenhu.xwh/develop/xiong_an/v_20180411/build
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib64
+includedir=${prefix}/include
+
+Name: OpenSSL-libssl
+Description: Secure Sockets Layer and cryptography libraries
+Version: 1.0.2l
+Requires.private: libcrypto
+Libs: -L${libdir} -lssl
+Libs.private: -Wl,--version-script=/chunk/wenhu.xwh/develop/xiong_an/v_20180411/external/recipes//openssl.map -ldl
+Cflags: -I${includedir} 

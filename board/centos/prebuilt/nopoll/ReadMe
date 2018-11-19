@@ -1,0 +1,6 @@
+# Release
+build for nopoll-0.4.4.tar.gz
+
+#Compile command
+make LDFLAGS="-L$HOME/board/centos/prebuilt/openssl/lib -lssl -lcrypto" CFLAGS="-I$HOME/board/centos/prebuilt/openssl/include"
+

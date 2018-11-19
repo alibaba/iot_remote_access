@@ -1,0 +1,12 @@
+{
+	"cloud_ip": "10.101.108.253",
+	"cloud_port": "29091",
+	"cert_path": "root.pem",
+	"is_tls_on": 0,
+	"is_debug_on": 0,
+	"listen_port": 22,
+	"listen_ip": "127.0.0.1",
+	"product_key": "aaaaaaaaaaa",
+	"device_name": "bbbbbbbbbbbbb",
+	"device_secret": "cccccccccccccccccccccccccccccccc"
+}
