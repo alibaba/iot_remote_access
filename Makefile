@@ -2,11 +2,11 @@
 
 BINARY = RemoteTerminalDaemon 
 
-BOARD_TYPE = centos
+board = centos
 
-CFLAGS := $(addprefix -I, $(shell find ./src/ -type d))
-CFLAGS += -Iboard/$(BOARD_TYPE)/prebuilt/nopoll/include/ -Iboard/$(BOARD_TYPE)/prebuilt/openssl/include/
-LDFLAGS := -Lboard/$(BOARD_TYPE)/prebuilt/nopoll/lib/ -Lboard/$(BOARD_TYPE)/prebuilt/openssl/lib/
+override CFLAGS += $(addprefix -I, $(shell find ./src/ -type d))
+override CFLAGS += -Iboard/$(board)/prebuilt/nopoll/include/ -Iboard/$(board)/prebuilt/openssl/include/
+LDFLAGS := -Lboard/$(board)/prebuilt/nopoll/lib/ -Lboard/$(board)/prebuilt/openssl/lib/
 LIBS := -lnopoll -lssl -lcrypto -pthread
 
 SOURCES := $(shell find ./src -name '*.c')
