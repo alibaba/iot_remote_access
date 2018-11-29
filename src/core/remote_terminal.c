@@ -4,7 +4,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <error.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -54,7 +53,7 @@ static int sda_connect_to_cloud (void)
     }
 
     msg_hdsk = sda_gen_handshake_msg(g_cfg->pk, g_cfg->dn, g_cfg->ds);
-    msg_hdr =  sda_gen_msg_header(2, strlen(msg_hdsk), DEFAULT_MSG_ID_HDSK, NULL);
+    msg_hdr =  sda_gen_msg_header(MSG_SERVICE_PROVIDER_CONN_REQ, strlen(msg_hdsk), DEFAULT_MSG_ID_HDSK, NULL);
 
     log_info("handshake header:%s", msg_hdr);
     log_info("handshak payload:%s", msg_hdsk);
@@ -452,7 +451,7 @@ int sda_run_loop (void)
                     memset(buf, 0, DEFAULT_MSG_BUFFER_LEN);
                     n = nopoll_conn_read(g_network.handle, buf, hdr.payload_len - nread > DEFAULT_MSG_BUFFER_LEN ? DEFAULT_MSG_BUFFER_LEN : hdr.payload_len - nread, nopoll_true, 1000);
                     nread += n;
-                    dump_hex(buf, n);
+                    //dump_hex(buf, n);
                     nwritten = 0;
                     while(nwritten < n){
                         m = send(_socketfd, buf + nwritten, n - nwritten, 0);

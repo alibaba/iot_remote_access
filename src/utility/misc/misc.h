@@ -6,7 +6,12 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#ifdef __unix__
 #include <error.h>
+#endif
+#ifdef __APPLE__
+#include <mach/error.h>
+#endif
 #include <signal.h>
 
 #define MAX_VAL(v1,v2)  ((v1) > (v2) ? (v1) : (v2))

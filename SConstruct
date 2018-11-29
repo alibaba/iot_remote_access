@@ -6,17 +6,20 @@ for k,v in os.environ.items():
 for k,v in ARGUMENTS.items():
     env[k]=v
 
+if 'board' not in env:
+    env['board'] = 'centos'
+
 env.AppendUnique(CFLAGS=['-Wall' ,'-Werror'])
 env.AppendUnique(LIBS=['pthread'])
-env.AppendUnique(LIBPATH=['board/centos/prebuilt/nopoll/lib/', 'board/centos/prebuilt/openssl/lib/'])
-env.AppendUnique(RPATH = os.getcwd() + '/board/centos/prebuilt/openssl/lib/')
+env.AppendUnique(LIBPATH=['board/'+env['board']+'/prebuilt/nopoll/lib/', 'board/'+env['board']+'/prebuilt/openssl/lib/'])
+env.AppendUnique(RPATH = os.getcwd() + '/board/'+env['board']+'/prebuilt/openssl/lib/')
 env.AppendUnique(CPPPATH = ['src/utility/hash_table/', 
                     'src/utility/json/', 
                     'src/utility/misc/', 
                     'src/utility/log/', 
                     'src/utility/sha256/', 
                     'src/connectivity/', 
-                    'board/centos/prebuilt/nopoll/include/', 'board/centos/prebuilt/openssl/include/'])
+                    'board/'+env['board']+'/prebuilt/nopoll/include/', 'board/'+env['board']+'/prebuilt/openssl/include/'])
 
 common = env.Object([Glob('src/core/*.c'), 
              Glob('src/utility/hash_table/*.c'), 
@@ -27,9 +30,9 @@ common = env.Object([Glob('src/core/*.c'),
              Glob('src/connectivity/*.c')])
 
 prog_static = env.Program('RemoteTerminalDaemon_static',
-            [common, 'board/centos/prebuilt/nopoll/lib/libnopoll.a',
-             'board/centos/prebuilt/openssl/lib/libssl.a',
-             'board/centos/prebuilt/openssl/lib/libcrypto.a'],
+            [common, 'board/'+env['board']+'/prebuilt/nopoll/lib/libnopoll.a',
+             'board/'+env['board']+'/prebuilt/openssl/lib/libssl.a',
+             'board/'+env['board']+'/prebuilt/openssl/lib/libcrypto.a'],
         LIBS = env['LIBS'] + ['dl'],
         CFLAGS = env['CFLAGS'] + ['-Wl,--no-as-needed -ldl'])
 

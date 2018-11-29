@@ -80,10 +80,12 @@ static char *_load_cfg_from_json(char *path, char *name)
 	return content;
 }
 
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
 static char *_get_current_work_dir()
 {
 	char *buff = NULL;
-    int read_len = 0;
     char *tmp = NULL;
 	
 	buff = malloc(FILENAME_MAX);
@@ -92,16 +94,36 @@ static char *_get_current_work_dir()
 		exit(1);
 	}
 	memset(buff, 0, FILENAME_MAX);
+#ifdef __APPLE__
+  uint32_t size = FILENAME_MAX;
+  if (_NSGetExecutablePath(buff, &size) != 0) {
+    // Buffer size is too small.
+    log_error("faild to get current directory");
+    exit(1);
+  }
+  log_info("current directory: %s\n", buff);
+
+  tmp = strrchr(buff, '/');
+  if(tmp){
+      if(buff[tmp - buff - 1] == '.')
+          buff[tmp - buff - 1] = '\0';
+      else
+          buff[tmp - buff] = '\0';
+  }
+#else     
+    int read_len = 0;
     read_len = readlink("/proc/self/exe", buff, FILENAME_MAX - 1);
     if(read_len <= 0){
         log_error("faild to read /proc ");
         exit(1);
     }
     buff[read_len] = '\0';
+
     tmp = strrchr(buff, '/');
     if(tmp){
         buff[tmp - buff] = '\0';
     }
+#endif    
 	return buff;
 }
 

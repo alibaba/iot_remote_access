@@ -6,18 +6,13 @@
 #define MSG_RESPONSE_FMT "{\"code\": %d, \"message\": \"%s\"}\r\n\r\n%s"
 
 typedef enum{
-    MSG_DBG_SWITCH                      = 1,            //tunnel功能开关.
-    MSG_SERVICE_PROVIDER_CONN_REQ       = 2,            //服务提供者发起（握手）连接请求.
-    MSG_SERVICE_CONSUMER_CONN_REQ       = 3,            //服务消费者发起（握手）连接请求.
-    MSG_SERVICE_PROVIDER_RAW_PROTOCOL   = 4,            //服务提供者发送的原始服务协议.
-    MSG_SERVICE_CONSUMER_RAW_PROTOCOL   = 5,            //服务消费者发送的原始服务协议. 
-    MSG_WEB_APPLY_DEV_LIST              = 6,            //前端向云端请求设备列表.
-    MSG_CLOUD_DEV_LIST_RESP             = 7,            //云端向前端返回设备列表信息.
-    MSG_SERVICE_CONSUMER_NEW_SESSION    = 8,            //新增session
-    MSG_SERVICE_CONSUMER_RELEASE_SESSION = 9,           //释放session
-    MSG_SESSION_HEART_BEAT              = 10,           // session 保活心跳
-    MSG_RESP_OK                         = 255           //消息的response
-
+    MSG_RESP_OK                         = 0,             //消息的response
+    MSG_SERVICE_PROVIDER_CONN_REQ       = 1,            //服务提供者发起（握手）连接请求.
+    MSG_SERVICE_CONSUMER_CONN_REQ       = 2,            //服务消费者发起（握手）连接请求.
+    MSG_SERVICE_PROVIDER_RAW_PROTOCOL   = 21,            //服务提供者发送的原始服务协议.
+    MSG_SERVICE_CONSUMER_RAW_PROTOCOL   = 22,            //服务消费者发送的原始服务协议. 
+    MSG_SERVICE_CONSUMER_NEW_SESSION    = 4,            //新增session
+    MSG_SERVICE_CONSUMER_RELEASE_SESSION = 5           //释放session
 }RemoteTerminalMsgType;
 
 typedef enum {
@@ -31,7 +26,7 @@ typedef enum {
 }RemoteTerminalServiceType;
 
 typedef enum{
-    ERR_SUCCESS                     = 0,                //成功 
+    ERR_TYPE_SUCCESS                = 0,                //成功 
     ERR_SIGNATURE_INVALID           = 101600,           //签名验证失败 
     ERR_PARAM_INVALID               = 101601,           //入参不合法 
     ERR_SESSION_LIMIT               = 101602,           //Session已达最大值
