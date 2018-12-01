@@ -271,23 +271,78 @@ static inline void _init_local_fd_array(int *localfd_array, int len)
     }
 }
 
+int _timeval_substract (struct timeval * a,
+                           struct timeval * b,
+                           struct timeval * result)
+{
+    /* Perform the carry for the later subtraction by updating
+     * y. */
+    if (a->tv_usec < b->tv_usec) {
+        int nsec = (b->tv_usec - a->tv_usec) / 1000000 + 1;
+        b->tv_usec -= 1000000 * nsec;
+        b->tv_sec += nsec;
+    }
+
+    if (a->tv_usec - b->tv_usec > 1000000) {
+        int nsec = (a->tv_usec - b->tv_usec) / 1000000;
+        b->tv_usec += 1000000 * nsec;
+        b->tv_sec -= nsec;
+    }
+
+    /* get the result */
+    result->tv_sec = a->tv_sec - b->tv_sec;
+    result->tv_usec = a->tv_usec - b->tv_usec;
+
+       /* return 1 if result is negative. */
+       return a->tv_sec < b->tv_sec;
+}
+
 static int _read_msg_hdr(char *buf, int len)
 {
     int i = 0;
-
+    int n = 0;
+	int timeout = 1000;
+	long ellapsed   = 0;
+ 
     if(len < DEFAULT_MSG_HDR_LEN)
         return -1;
 
     memset(buf, 0, len);
-    
+    struct  timeval    start;
+    struct  timeval    stop;
+    struct  timeval    diff; 
+
+#if defined(NOPOLL_OS_WIN32)
+	nopoll_win32_gettimeofday (&start, NULL);
+#else
+	gettimeofday (&start, NULL);
+#endif
+
     while(1){
-        nopoll_conn_read(g_network.handle, buf+i, 1, nopoll_true, 1000);
+        n = nopoll_conn_read(g_network.handle, buf+i, 1, nopoll_false, 500);
         if(buf[0] != '{'){
-            log_error("hander json formate error.\n"); 
             return -1;
         } 
+
+		if(n == -1){
+#if defined(NOPOLL_OS_WIN32)
+			nopoll_win32_gettimeofday (&stop, NULL);
+#else
+			gettimeofday (&stop, NULL);
+#endif
+			_timeval_substract (&stop, &start, &diff);
+			ellapsed = (diff.tv_sec * 1000) + (diff.tv_usec / 1000);
+			if (ellapsed > (timeout)){
+				log_error("timeout %d, we only read:  %d\n", ellapsed, i);
+				break;
+			}
+			else
+				continue;
+		}
+
         if(buf[i] == '}'){
             nopoll_conn_read(g_network.handle, buf+i+1, 4, nopoll_true, 1000);
+
             return i;
         }
         ++i;
@@ -340,8 +395,8 @@ int sda_run_loop (void)
     _init_local_fd_array(socketfd_local, DEFAULT_SESSION_COUNT);
     log_info("connect to cloud success, socketfd: %d ", connInfo.sockfd);
     while (g_is_running) {
-        tv.tv_sec = 1;
-        tv.tv_usec = 0L;
+        tv.tv_sec = 0;
+        tv.tv_usec = 500*1000L;
         _add_select_array(connInfo.sockfd, socketfd_local, DEFAULT_SESSION_COUNT, &rfds);
 
         ret = select(_get_max_socketfd(connInfo.sockfd, socketfd_local, DEFAULT_SESSION_COUNT), &rfds, NULL, NULL, &tv);
@@ -352,27 +407,55 @@ int sda_run_loop (void)
                 log_info("there is no package received in 30 min, close current connection...");
                 break;
             } 
-            continue;
         }else if(ret < 0){
             log_error("failed to select: %s , close current connection", strerror(errno));
             _send_error_resp(ERR_CONNECTION_CLOSE, "device network error.", NULL, NULL, buf);
             break;
         }
 
-        if (FD_ISSET(connInfo.sockfd, &rfds)) {
+		//local service
+		if(ret > 0)
+		{
+			int index = _get_active_socketfd_index(socketfd_local, DEFAULT_SESSION_COUNT, &rfds);
+			if(index != -1){
+				char *token = get_session_id_by_socketfd(socketfd_local + index);
+				if(token == NULL){
+					log_error("can not find session id for socketfd: %d, close it.", socketfd_local[index]);
+					_del_socketfd_by_index(index, socketfd_local, DEFAULT_SESSION_COUNT);
+					close(socketfd_local[index]);
+					continue;
+				}
+
+				ret = recv(socketfd_local[index], buf, DEFAULT_MSG_BUFFER_LEN - DEFAULT_MSG_HDR_LEN, 0);
+				timeout = 0; 
+				log_debug("recv msg comes from sshd, socketfd: %d, index: %d, len:%d ", socketfd_local[index], index, ret);
+				//dump_hex(buf, ret);
+				if (ret > 0) {
+					buf_hdr = sda_gen_msg_header(MSG_SERVICE_PROVIDER_RAW_PROTOCOL, ret, NULL, token);
+					memmove(buf + strlen(buf_hdr), buf, ret);
+					memmove(buf, buf_hdr, strlen(buf_hdr));
+					tmp = rd_net_write(&g_network, NULL, buf, ret + strlen(buf_hdr), 0);
+					log_debug("resend to cloud, len:%d", tmp);
+				} else {
+					log_error("local service exit:  %s ", strerror(errno));
+					free_session(get_session_id_by_socketfd(socketfd_local + index));
+					_del_socketfd_by_index(index, socketfd_local, DEFAULT_SESSION_COUNT);
+					close(socketfd_local[index]);
+					_send_error_resp(ERR_SERVICE_EXIT, "local service exit", NULL, token, buf);
+				}
+			}
+		}
+		
+		//cloud service
+        {
             ret = _read_msg_hdr(buf, DEFAULT_MSG_BUFFER_LEN);
-            //ret = rd_net_read(&g_network, NULL, buf, DEFAULT_MSG_BUFFER_LEN, 0);
-            log_debug("websocket recv, len %d", ret);
-            if(ret < 0){
-                log_error("recv msg len: %d, find remote server error:  %s ", ret, strerror(errno));
-                _send_error_resp(ERR_CONNECTION_CLOSE, "cloud network error.", NULL, NULL, buf);
-                break;
-            }
+			if(ret < 0)
+				continue;
+            
             timeout = 0;
             if(0 == get_msg_header(buf, &hdr)){
                 log_error("read wrong format data, pending data len: %d", rd_net_read(&g_network, NULL, buf, DEFAULT_MSG_BUFFER_LEN, 0));
                 _send_error_resp(ERR_PARAM_INVALID, "cloud msg format is invalid", NULL, NULL, buf);
-                exit(0);
                 continue;
             }
             if(hdr.msg_type == MSG_SERVICE_CONSUMER_NEW_SESSION){
@@ -450,6 +533,8 @@ int sda_run_loop (void)
                 while(nread < hdr.payload_len){
                     memset(buf, 0, DEFAULT_MSG_BUFFER_LEN);
                     n = nopoll_conn_read(g_network.handle, buf, hdr.payload_len - nread > DEFAULT_MSG_BUFFER_LEN ? DEFAULT_MSG_BUFFER_LEN : hdr.payload_len - nread, nopoll_true, 1000);
+                    if(n == -1)
+                        continue;
                     nread += n;
                     //dump_hex(buf, n);
                     nwritten = 0;
@@ -476,39 +561,7 @@ int sda_run_loop (void)
                     goto _exit;
                 }
             }
-        } else {
-            int index = _get_active_socketfd_index(socketfd_local, DEFAULT_SESSION_COUNT, &rfds);
-            if(index == -1){
-                log_error("select error  ");
-                continue;
-            }
-
-            char *token = get_session_id_by_socketfd(socketfd_local + index);
-            if(token == NULL){
-                log_error("can not find session id for socketfd: %d, close it.", socketfd_local[index]);
-                _del_socketfd_by_index(index, socketfd_local, DEFAULT_SESSION_COUNT);
-                close(socketfd_local[index]);
-                continue;
-            }
-
-            ret = recv(socketfd_local[index], buf, DEFAULT_MSG_BUFFER_LEN - DEFAULT_MSG_HDR_LEN, 0);
-            timeout = 0; 
-            log_debug("recv msg comes from sshd, socketfd: %d, index: %d, len:%d ", socketfd_local[index], index, ret);
-            //dump_hex(buf, ret);
-            if (ret > 0) {
-                buf_hdr = sda_gen_msg_header(MSG_SERVICE_PROVIDER_RAW_PROTOCOL, ret, NULL, token);
-                memmove(buf + strlen(buf_hdr), buf, ret);
-                memmove(buf, buf_hdr, strlen(buf_hdr));
-                tmp = rd_net_write(&g_network, NULL, buf, ret + strlen(buf_hdr), 0);
-                log_debug("resend to cloud, len:%d", tmp);
-            } else {
-                log_error("local service exit:  %s ", strerror(errno));
-                free_session(get_session_id_by_socketfd(socketfd_local + index));
-                _del_socketfd_by_index(index, socketfd_local, DEFAULT_SESSION_COUNT);
-                close(socketfd_local[index]);
-                _send_error_resp(ERR_SERVICE_EXIT, "local service exit", NULL, token, buf);
-            }
-        }
+        } 
     }
 
 _exit:

@@ -60,8 +60,8 @@ char *sda_gen_handshake_msg(char *pk, char *dn, char *ds)
 
     memset(msg,0,sizeof(msg));
     snprintf(msg, sizeof(msg), MSG_HDSK_FMT, 
-                    g_uuid, pk, dn, "version_", 
-                    ipaddr, "MAC_", "", calc_sign(g_uuid, dn, pk, ds));
+                    g_uuid, pk, dn, "v2.0", 
+                    ipaddr, "", "", calc_sign(g_uuid, dn, pk, ds));
 
     return msg; 
 }
