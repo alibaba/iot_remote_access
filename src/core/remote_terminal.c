@@ -255,6 +255,8 @@ static inline int _get_active_socketfd_index(int *localfd_array, int len, fd_set
     int i = 0;
 
     for(i = 0; i < len; i++){
+        if(localfd_array[i] == -1)
+            continue;
         if(FD_ISSET(localfd_array[i], rfds) > 0)
             return i;
     }
@@ -403,6 +405,7 @@ int sda_run_loop (void)
 
         memset(buf, 0, DEFAULT_MSG_BUFFER_LEN);
         if (ret == 0) {
+            nopoll_conn_send_ping (g_network.handle);
             if(++timeout >= 30*60){
                 log_info("there is no package received in 30 min, close current connection...");
                 break;
