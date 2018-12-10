@@ -59,3 +59,6 @@ RemoteTerminalDaemon_static: 静态库链接版本的可执行程序，可直接
 直接运行，后面跟上设备三要素即可。
 ```
 
+**注意: **必须把board/xxx/prebuilt下面所有的.so，顶层目录的root.pem，顶层目录的remote_terminal.json及RemoteTerminalDaemon同时安装在设备上
+才能运行成功。
+
