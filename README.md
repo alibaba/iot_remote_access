@@ -59,6 +59,8 @@ RemoteTerminalDaemon_static: 静态库链接版本的可执行程序，可直接
 直接运行，后面跟上设备三要素即可。
 ```
 
-**注意: **必须把board/xxx/prebuilt下面所有的.so，顶层目录的root.pem，顶层目录的remote_terminal.json及RemoteTerminalDaemon同时安装在设备上
+**注意**: 必须把board/xxx/prebuilt下面所有的.so，顶层目录的root.pem，顶层目录的remote_terminal.json及RemoteTerminalDaemon同时安装在设备上
 才能运行成功。
 
+PS: 如有任何问题，请钉钉扫描咨询。
+![asdf](https://camo.githubusercontent.com/bc61a578aa686d36c550ee657498786a0afdffdf/68747470733a2f2f63646e2e6e6c61726b2e636f6d2f6c61726b2f302f323031382f706e672f31363035352f313534333838383432313239332d36643638663830632d376261362d343363362d383737372d6331636365623035643834642e706e67)
