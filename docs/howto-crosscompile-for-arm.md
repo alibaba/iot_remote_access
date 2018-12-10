@@ -28,7 +28,7 @@ cd /home/yuehu/project/toolchain/Demo/ql-oe/sysroots/x86_64-linux/usr/bin/arm-oe
 ```plain
 cd /home/yuehu/github/
 
-git clone https://github.com/xiaowenhuyuehu/remote_access.git
+git clone https://github.com/alibaba/iot_remote_access.git
 ```
 
 

@@ -12,7 +12,7 @@
 ```plain
 cd /home/yuehu/github/
 
-git clone https://github.com/xiaowenhuyuehu/remote_access.git
+git clone https://github.com/alibaba/iot_remote_access.git
 ```
 
 

@@ -12,7 +12,7 @@ Linux iot 4.15.0-36-generic #39~16.04.1-Ubuntu SMP Tue Sep 25 08:59:23 UTC 2018 
 ```plain
 cd /home/yuehu/github/
 
-git clone https://github.com/xiaowenhuyuehu/remote_access.git
+git clone https://github.com/alibaba/iot_remote_access.git
 ```
 
 
