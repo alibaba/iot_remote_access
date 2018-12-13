@@ -4,7 +4,7 @@
 
 参考board/demo/创建子目录。目录必须符合以下格式:
 
-![aaaaa](https://cdn-pri.nlark.com/lark/0/2018/png/16055/1544666677758-b674111e-3a70-4b69-9a1c-fe126fcac771.png)
+![undefined](https://cdn-pri.nlark.com/lark/0/2018/png/16055/1544666677758-b674111e-3a70-4b69-9a1c-fe126fcac771.png)
 
 ### 第三方库编译
 
