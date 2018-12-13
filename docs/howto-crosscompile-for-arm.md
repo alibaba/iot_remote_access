@@ -83,7 +83,7 @@ tar zxvf nopoll-0.4.6.tar.gz
 
 * 配置
 ```plain
-./configure --prefix=/home/yuehu/github/remote_access/board/demo/prebuilt/nopoll CFLAGS=-L/home/yuehu/github/remote_access/board/demo/prebuilt/openssl/include LDFLAGS=-L/home/yuehu/github/remote_access/board/demo/prebuilt/openssl/lib --host=arm-oe-linux-gnueabi --build=arm-oe-linux-gnueabi
+./configure --prefix=/home/yuehu/github/remote_access/board/demo/prebuilt/nopoll CFLAGS=-I/home/yuehu/github/remote_access/board/demo/prebuilt/openssl/include LDFLAGS=-L/home/yuehu/github/remote_access/board/demo/prebuilt/openssl/lib --host=arm-oe-linux-gnueabi --build=arm-oe-linux-gnueabi
 
 ```
 * 修改libtool
