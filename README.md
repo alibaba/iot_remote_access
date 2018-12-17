@@ -1,6 +1,13 @@
 # 阿里云IoT远程运维套装之远程访问设备端源码
 
+## 功能
 
+* 跨公网SSH到你的设备上，并提供基于浏览器方案的免安装web shell.
+* 无需公网IP，直接浏览设备上的文件，并提供下载/上传功能.
+* 内网穿透，支持跨公网访问Windows远程桌面.
+* Android ADB不再局限于局域网调试.
+* 免费，开源，稳定，安全的远程运维神器。
+* 更多介绍，请浏览 [WIKI](https://github.com/alibaba/iot_remote_access/wiki)
 ## 编译
 
 以下在ubuntu上演示如何编译。
