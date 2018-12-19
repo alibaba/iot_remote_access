@@ -1,20 +1,53 @@
 # 阿里云IoT远程运维套装之远程访问设备端源码
 
+## 功能
 
+* 跨公网SSH到你的设备上，并提供基于浏览器方案的免安装web shell.
+* 无需公网IP，直接浏览设备上的文件，并提供下载/上传功能.
+* 内网穿透，支持跨公网访问Windows远程桌面.
+* Android ADB不再局限于局域网调试.
+* 免费，开源，稳定，安全的远程运维神器。
+* 更多介绍，请浏览 [WIKI](https://github.com/alibaba/iot_remote_access/wiki)
 ## 编译
 
-以下在ubuntu上演示如何编译。
-### 下载Scons
+### 编译CentOS版本
 
-```shell
-sudo apt-get install -y scons
+默认已经支持64bit的CentOS/Ubuntu。
+
+`make board=centos`
+
+### 编译MacOS版本
+
+默认已经支持 OSX 10.11.6:
+
+`make board=macos`
+
+### 编译Arm V7 32位软浮点版本
+
+注意，需要下载[ToolChain](https://releases.linaro.org/components/toolchain/binaries/latest-7/arm-linux-gnueabi/gcc-linaro-7.3.1-2018.05-i686_arm-linux-gnueabi.tar.xz) 并解压到合适目录。
+
+`make board=armv7 CC=/home/yuehu/toolchain/gcc-linaro-7.3.1-2018.05-i686_arm-linux-gnueabi/bin/arm-linux-gnueabi-gcc STRIP=/home/yuehu/toolchain/gcc-linaro-7.3.1-2018.05-i686_arm-linux-gnueabi/bin/arm-linux-gnueabi-strip`
+
+### 编译其他平台
+
+1. 请参考scripts/support_armv7.sh在scripts下面创建一个新的support_xxx.sh，指定以下几个参数:
+
 ```
+_ToolChainRootDirectory:        指的是ToolChain解压的根目录，一般情况下，ToolChain的根目录包含include/bin/lib等目录
+_CrossPrefix:                   指的所采用的Gcc的前缀，一般在ToolChain的根目录bin下，有*-gcc，比如arm-linux-gnueabi-gcc等。
+_Host:                          指的是交叉编译器所运行的OS信息，一般情况下，可以通过*-gcc -v获取其中的--host值。
+_Target:                        指的是交叉编译器所运行的Target信息，一般情况下，可以通过*-gcc -v获取其中的--target值。
+_TargetBit:                     值的是交叉编译的目标平台的bit数，一般为 32位。
+_NewBoardName:                  新的平台的名称，比如armv8等。
 
-### 编译
-
-```shell
-scons
 ```
+2. 在scripts下面运行这个新的脚本:
+
+`./support_xxx.sh`
+
+3. 编译
+
+`make board=XXXX CC=XXXXX/bin/arm-linux-gnueabi-gcc STRIP=XXXX/bin/arm-linux-gnueabi-strip`
 
 ### 生成物介绍
 
@@ -64,3 +97,4 @@ RemoteTerminalDaemon_static: 静态库链接版本的可执行程序，可直接
 
 PS: 如有任何问题，请钉钉扫描咨询。
 ![asdf](https://camo.githubusercontent.com/bc61a578aa686d36c550ee657498786a0afdffdf/68747470733a2f2f63646e2e6e6c61726b2e636f6d2f6c61726b2f302f323031382f706e672f31363035352f313534333838383432313239332d36643638663830632d376261362d343363362d383737372d6331636365623035643834642e706e67)
+

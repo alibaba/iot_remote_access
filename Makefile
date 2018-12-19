@@ -2,12 +2,12 @@
 
 BINARY = RemoteTerminalDaemon 
 
-board = centos
+board ?= centos
 
 override CFLAGS += $(addprefix -I, $(shell find ./src/ -type d))
-override CFLAGS += -Iboard/$(board)/prebuilt/nopoll/include/ -Iboard/$(board)/prebuilt/openssl/include/
-LDFLAGS := -Lboard/$(board)/prebuilt/nopoll/lib/ -Lboard/$(board)/prebuilt/openssl/lib/
-LIBS := -lnopoll -lssl -lcrypto -pthread
+override CFLAGS += -Iboard/$(board)/include/nopoll
+LDFLAGS := -Lboard/$(board)/lib/
+LIBS := -lnopoll -lssl -lcrypto -pthread -ldl
 
 SOURCES := $(shell find ./src -name '*.c')
 OBJECTS := $(SOURCES:%.c=%.o)
@@ -21,4 +21,7 @@ $(BINARY): $(OBJECTS)
 
 clean:
 	rm -f $(OBJECTS) $(BINARY) 
+
+#run example:
+#make board=armv7 CC=/home/yuehu/toolchain/gcc-linaro-7.3.1-2018.05-i686_arm-linux-gnueabi/bin/arm-linux-gnueabi-gcc STRIP=/home/yuehu/toolchain/gcc-linaro-7.3.1-2018.05-i686_arm-linux-gnueabi/bin/arm-linux-gnueabi-strip
 
