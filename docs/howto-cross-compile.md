@@ -1,60 +1,94 @@
 ## 代码移植指南
 
-### 创建board及其子目录
+### 交叉编译第三方库
 
-参考board/demo/创建子目录。目录必须符合以下格式:
-```shell
-.
-├── centos
-│   └── prebuilt
-│       ├── nopoll
-│       │   ├── include
-│       │   ├── lib
-│       │   └── ReadMe
-│       └── openssl
-│           ├── include
-│           ├── lib
-│           └── ReadMe
-├── demo
-│   └── prebuilt
-│       ├── nopoll
-│       │   ├── include
-│       │   └── lib
-│       └── openssl
-│           ├── include
-│           └── lib
-└── macos
-    └── prebuilt
-        ├── nopoll
-        │   ├── include
-        │   └── lib
-        └── openssl
-            ├── include
-            └── lib
+1. 在scripts目录下，创建一个新的support脚本，建议直接拷贝`support_armv7.sh`, 假设重命名为`support_myboard.sh`.
+
+2. 根据实际情况，修改`support_myboard.sh`里面的以下几项: 
 
 ```
+_ToolChainRootDirectory:        指的是ToolChain解压的根目录，一般情况下，ToolChain的根目录包含include/bin/lib等目录
+_CrossPrefix:                   指的所采用的Gcc的前缀，一般在ToolChain的根目录bin下，有*-gcc，比如arm-linux-gnueabi-gcc等。
+_Host:                          指的是交叉编译器所运行的OS信息，一般情况下，可以通过*-gcc -v获取其中的--host值。
+_Target:                        指的是交叉编译器所运行的Target信息，一般情况下，可以通过*-gcc -v获取其中的--target值。
+_TargetBit:                     值的是交叉编译的目标平台的bit数，一般为 32位。
+_NewBoardName:                  新的平台的名称，最好跟脚本名称里包含的board名称一致，假如为myboard。
+```
 
-### 第三方库编译
+3. 在scripts目录下，运行新建的support脚本:
 
-#### 编译 OpenSSL
+`./support_myboard.sh`
 
-* 首先确认toolchain里是否已经提供OpenSSL库，如果已提供则无需再交叉编译此库。
-* 参考[OpenSSL Compilation and Installation](https://wiki.openssl.org/index.php/Compilation_and_Installation#ARM)完成OpenSSL的交叉编译.
-* **注意** 编译完成后需要拷贝到新创建的board目录.
-
-#### 编译 nopoll
-
-* nopoll 目前只能支持OpenSSL库，请务必先编译OpenSSL并拷贝到新创建的board目录.
-* 参考[howto-crosscompile-for-arm.md](https://github.com/alibaba/iot_remote_access/tree/master/docs/howto-crosscompile-for-arm.md)完成nopoll的交叉编译.
+4. 执行完成后，返回到仓库所在目录，确认新建的board符合一下目录格式:
+```
+board/
+├── alios
+│   ├── include
+│   │   ├── nopoll
+│   │   └── openssl
+│   └── lib
+│       ├── engines
+│       ├── libcrypto.a
+│       ├── libcrypto.so -> libcrypto.so.1.0.0
+│       ├── libcrypto.so.1.0.0
+│       ├── libnopoll.a
+│       ├── libnopoll.la
+│       ├── libssl.a
+│       ├── libssl.so -> libssl.so.1.0.0
+│       ├── libssl.so.1.0.0
+│       └── pkgconfig
+├── armv7
+│   ├── include
+│   │   ├── nopoll
+│   │   └── openssl
+│   └── lib
+│       ├── engines
+│       ├── libcrypto.a
+│       ├── libcrypto.so -> libcrypto.so.1.0.0
+│       ├── libcrypto.so.1.0.0
+│       ├── libnopoll.a
+│       ├── libnopoll.la
+│       ├── libssl.a
+│       ├── libssl.so -> libssl.so.1.0.0
+│       ├── libssl.so.1.0.0
+│       └── pkgconfig
+├── centos
+│   ├── include
+│   │   ├── nopoll
+│   │   └── openssl
+│   └── lib
+│       ├── engines
+│       ├── libcrypto.a
+│       ├── libcrypto.so -> libcrypto.so.1.0.0
+│       ├── libcrypto.so.1.0.0
+│       ├── libnopoll.a
+│       ├── libnopoll.la
+│       ├── libssl.a
+│       ├── libssl.so -> libssl.so.1.0.0
+│       ├── libssl.so.1.0.0
+│       └── pkgconfig
+└── macos
+    ├── include
+    │   ├── nopoll
+    │   └── openssl
+    └── lib
+        ├── engines
+        ├── libcrypto.1.0.0.dylib
+        ├── libcrypto.a
+        ├── libcrypto.dylib -> libcrypto.1.0.0.dylib
+        ├── libnopoll.a
+        ├── libnopoll.la
+        ├── libssl.1.0.0.dylib
+        ├── libssl.a
+        ├── libssl.dylib -> libssl.1.0.0.dylib
+        └── pkgconfig
+```
 
 ### 核心代码编译
 
-在顶层目录执行以下命令:
+1. 在顶层目录执行以下命令:
 ```shell
-make board=XXXX CFLAGS="" CC=""
-注意，XXX需要换成真实的新创建的board子目录的名称
-CFLAGS用来指定sysroot及toolchain其他头文件的路径
-CC指定当前所使用的gcc的绝对路径.
+make board=armv7 CC={实际的toolchain目录}/bin/arm-linux-gnueabi-gcc STRIP={实际的toolchain目录}/bin/arm-linux-gnueabi-strip
 ```
 
 如有问题，请参考[howto-crosscompile-for-arm.md](https://github.com/alibaba/iot_remote_access/tree/master/docs/howto-crosscompile-for-arm.md)完成nopoll的交叉编译.
