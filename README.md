@@ -33,7 +33,7 @@
 1. 请参考scripts/support_armv7.sh在scripts下面创建一个新的support_xxx.sh，指定以下几个参数:
 
 ```
-_ToolChainRootDirectory:        指的是ToolChain解压的根目录，一般情况下，ToolChain的根目录包含include/bin/lib等目录
+_ToolChainRootDirectory:        指的是ToolChain解压的根目录，一般情况下，ToolChain的根目录包含include/bin/lib等目录
 _CrossPrefix:                   指的所采用的Gcc的前缀，一般在ToolChain的根目录bin下，有*-gcc，比如arm-linux-gnueabi-gcc等。
 _Host:                          指的是交叉编译器所运行的OS信息，一般情况下，可以通过*-gcc -v获取其中的--host值。
 _Target:                        指的是交叉编译器所运行的Target信息，一般情况下，可以通过*-gcc -v获取其中的--target值。
