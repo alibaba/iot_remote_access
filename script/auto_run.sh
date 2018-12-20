@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SystemType=`uname`
-DefaultPackageVersion="20181202"
+DefaultPackageVersion="20181220"
 
 if [ "$#" != 3 ]; then
     echo "usage: ./RemoteTerminalDaemon ProductKey DeviceName DeviceSecret"
@@ -26,6 +26,7 @@ fi
 Url=$DefaultUrlPrefix$BinaryPackage"_"$DefaultPackageVersion".tar.gz"
 PackageName=$BinaryPackage"_"$DefaultPackageVersion".tar.gz"
 ProgramName="RemoteTerminalDaemon_static"
+ProgramName_MQTT="mqtt-example"
 
 if [ ! -d $BinaryPackage ]; then
     echo "downloading $Url..."
@@ -35,6 +36,8 @@ fi
 
 cd ./$BinaryPackage
 
+ps -eo user,pid,ppid,stat,args | grep "$ProgramName_MQTT" | grep -v "grep" | awk '{print $2}' | xargs kill -15
+chmod +x ./$ProgramName_MQTT &&./$ProgramName_MQTT "$1" "$2" "$3" > /dev/null &
 chmod +x ./$ProgramName &&./$ProgramName "$1" "$2" "$3"
 
 
