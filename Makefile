@@ -6,7 +6,7 @@ board ?= centos
 
 override CFLAGS += $(addprefix -I, $(shell find ./src/ -type d))
 override CFLAGS += -Iboard/$(board)/include/nopoll
-LDFLAGS := -Lboard/$(board)/lib/
+LDFLAGS := -Lboard/$(board)/lib/ --static
 LIBS := -lnopoll -lssl -lcrypto -pthread -ldl
 
 SOURCES := $(shell find ./src -name '*.c')
