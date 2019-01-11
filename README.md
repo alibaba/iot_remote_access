@@ -2,12 +2,13 @@
 
 ## 功能
 
+* Link IoT Edge Lite版环境搭建指南，请点击[链接](https://github.com/alibaba/iot_remote_access/wiki/Link-IoT-Lite%E7%89%88%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA%E6%8C%87%E5%8D%97).
 * 跨公网SSH到你的设备上，并提供基于浏览器方案的免安装web shell.
 * 无需公网IP，直接浏览设备上的文件，并提供下载/上传功能.
 * 内网穿透，支持跨公网访问Windows远程桌面.
 * Android ADB不再局限于局域网调试.
 * 免费，开源，稳定，安全的远程运维神器。
-* 更多介绍，请浏览 [WIKI](https://github.com/alibaba/iot_remote_access/wiki)
+* 技术及产品架构介绍，请浏览 [WIKI](https://github.com/alibaba/iot_remote_access/wiki)
 ## 编译
 
 ### 编译CentOS版本
