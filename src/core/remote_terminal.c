@@ -18,6 +18,7 @@
 #include "simple_log.h"
 #include "net_protocol.h"
 #include "session_mgr.h"
+#include "ca.h"
 
 CFG_STARTUP *g_cfg = NULL;
 Network_t g_network;
@@ -42,10 +43,11 @@ static int sda_connect_to_cloud (void)
     char *msg_hdsk = NULL;
     char *msg_hdr = NULL;
     char buf[DEFAULT_MSG_HDR_LEN * 2] = {0};
+    char *certs = load_certs();
 
     rd_net_init(&g_network, RD_NET_WEBSOCKET, g_cfg->is_debug_on == 1 ? 1 : 0,
                     g_cfg->cloud_ip, g_cfg->cloud_port, NULL, 
-                    g_cfg->is_tls_on , g_cfg->cert_path, NULL);
+                    g_cfg->is_tls_on , certs, NULL);
 
     ret = rd_net_connect(&g_network);
     if (0 != ret) {

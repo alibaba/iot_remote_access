@@ -17,7 +17,6 @@ static void _dump_cfg()
 
 	log_info("cloud ip: %s", g_cfg->cloud_ip);
 	log_info("cloud port: %s", g_cfg->cloud_port);
-	log_info("cert path: %s", g_cfg->cert_path);
 	log_info("tls switch: %d", g_cfg->is_tls_on);
 	log_info("support service count: %d", g_cfg->service_count);
     p = g_cfg->service;
@@ -277,7 +276,6 @@ CFG_STARTUP *init_cfg(char *pk, char *dn, char *ds)
 	
 	GET_STRING_VAL("cloud_ip", &g_cfg->cloud_ip);
 	GET_STRING_VAL("cloud_port", &g_cfg->cloud_port);
-	GET_STRING_VAL("cert_path", &g_cfg->cert_path);
 	GET_INT_VAL("is_tls_on", &g_cfg->is_tls_on);
 	GET_INT_VAL("is_debug_on", &g_cfg->is_debug_on);
 
@@ -343,7 +341,6 @@ void deinit_cfg()
 
 	free(g_cfg->cloud_ip);
 	free(g_cfg->cloud_port);
-	free(g_cfg->cert_path);
 	if(g_cfg->pk)
 		free(g_cfg->pk);
 	if(g_cfg->dn)

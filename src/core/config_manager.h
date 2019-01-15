@@ -19,7 +19,6 @@ struct service_info {
 typedef struct{
     char                *cloud_ip;
     char                *cloud_port;  
-    char                *cert_path;
     char                *pk;
     char                *dn;
     char                *ds;
