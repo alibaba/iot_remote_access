@@ -91,5 +91,5 @@ board/
 make board=armv7 CC={实际的toolchain目录}/bin/arm-linux-gnueabi-gcc STRIP={实际的toolchain目录}/bin/arm-linux-gnueabi-strip
 ```
 
-如有问题，请参考[howto-crosscompile-for-arm.md](https://github.com/alibaba/iot_remote_access/tree/master/docs/howto-crosscompile-for-arm.md)完成nopoll的交叉编译.
+如有问题，请参考[howto-crosscompile-for-arm.md](https://github.com/alibaba/iot_remote_access/tree/master/docs/howto-crosscompile-for-arm-linux-step-by-step.md)手动完成第三方库的的交叉编译.
 
