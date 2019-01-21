@@ -50,11 +50,11 @@ cd -
 
 echo "Compile nopoll..."
 
-#rm -rf nopoll
-#tar zxf nopoll-0.4.6.tar.gz
-#cd nopoll
-#./autogen.sh --prefix="${_RootDir}/board/${_NewBoardName}/" CC="${_CC}"  --host=${_Target}  CFLAGS="-I${_RootDir}/board/${_NewBoardName}/include" --disable-shared
-#make CFLAGS="-I${_RootDir}/board/${_NewBoardName}/include -DNOPOLL_HAVE_TLSv11_ENABLED -DNOPOLL_HAVE_TLSv12_ENABLED -DNOPOLL_HAVE_TLSv10_ENABLED" LDFLAGS="-L${_RootDir}/board/${_NewBoardName}/lib/ -ldl -lpthread"
-#make install
-#cd -
-#
+rm -rf nopoll
+tar zxf nopoll-0.4.6.tar.gz
+cd nopoll
+./autogen.sh --prefix="${_RootDir}/board/${_NewBoardName}/" CC="${_CC}"  --host=${_Target}  CFLAGS="-I${_RootDir}/board/${_NewBoardName}/include" --disable-shared
+make CFLAGS="-I${_RootDir}/board/${_NewBoardName}/include -DNOPOLL_HAVE_TLSv11_ENABLED -DNOPOLL_HAVE_TLSv12_ENABLED -DNOPOLL_HAVE_TLSv10_ENABLED" LDFLAGS="-L${_RootDir}/board/${_NewBoardName}/lib/ -ldl -lpthread"
+make install
+cd -
+
