@@ -7,7 +7,7 @@
 2. 根据实际情况，修改`support_myboard.sh`里面的以下几项: 
 
 ```
-_ToolChainRootDirectory:        指的是ToolChain解压的根目录，一般情况下，ToolChain的根目录包含include/bin/lib等目录
+_ToolChainRootDirectory:        指的是ToolChain解压的根目录，一般情况下，ToolChain的根目录包含include/bin/lib等目录
 _CrossPrefix:                   指的所采用的Gcc的前缀，一般在ToolChain的根目录bin下，有*-gcc，比如arm-linux-gnueabi-gcc等。
 _Host:                          指的是交叉编译器所运行的OS信息，一般情况下，可以通过*-gcc -v获取其中的--host值。
 _Target:                        指的是交叉编译器所运行的Target信息，一般情况下，可以通过*-gcc -v获取其中的--target值。
@@ -91,5 +91,5 @@ board/
 make board=armv7 CC={实际的toolchain目录}/bin/arm-linux-gnueabi-gcc STRIP={实际的toolchain目录}/bin/arm-linux-gnueabi-strip
 ```
 
-如有问题，请参考[howto-crosscompile-for-arm.md](https://github.com/alibaba/iot_remote_access/tree/master/docs/howto-crosscompile-for-arm.md)完成nopoll的交叉编译.
+如有问题，请参考[howto-crosscompile-for-arm.md](https://github.com/alibaba/iot_remote_access/tree/master/docs/howto-crosscompile-for-arm-linux-step-by-step.md)手动完成第三方库的的交叉编译.
 
