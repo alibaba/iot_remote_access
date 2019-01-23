@@ -116,8 +116,8 @@ extern "C" {
 
 #if !(defined(VMS) || defined(__VMS)) /* VMS uses logical names instead */
 #if defined(HEADER_CRYPTLIB_H) && !defined(OPENSSLDIR)
-#define ENGINESDIR "/home/yuehu/remote_access_device/scripts/..//board/centos/lib/engines"
-#define OPENSSLDIR "/home/yuehu/remote_access_device/scripts/..//board/centos/ssl"
+#define ENGINESDIR "/tmp/iot_remote_access/script/..//board/centos/lib/engines"
+#define OPENSSLDIR "/tmp/iot_remote_access/script/..//board/centos/ssl"
 #endif
 #endif
 

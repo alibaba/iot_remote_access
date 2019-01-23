@@ -1,4 +1,4 @@
-prefix=/home/yuehu/remote_access_device/scripts/..//board/centos
+prefix=/tmp/iot_remote_access/script/..//board/centos
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
