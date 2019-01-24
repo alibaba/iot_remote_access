@@ -1,0 +1,10 @@
+prefix=/tmp/iot_remote_access/script/..//board/mips_openwrt 
+exec_prefix=${prefix} 
+libdir=${exec_prefix}/lib 
+includedir=${prefix}/include 
+
+Name: libNoPoll
+Description: LibNoPoll: websocket toolkit library
+Version: 0.4.6.b400 
+Libs: -L${libdir} -lnopoll 
+Cflags: -I${includedir}/nopoll
