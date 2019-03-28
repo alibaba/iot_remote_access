@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #ifdef __unix__
-#include <error.h>
+//#include <error.h>
 #endif
 #ifdef __APPLE__
 #include <mach/error.h>

@@ -4,9 +4,46 @@
 	"cert_path": "root.pem",
 	"is_tls_on": 1,
 	"is_debug_on": 0,
-	"listen_port": 22,
-	"listen_ip": "127.0.0.1",
-	"product_key": "aaaaaaaaaaa",
-	"device_name": "bbbbbbbbbbbbb",
-	"device_secret": "cccccccccccccccccccccccccccccccc"
+	"services": [{
+			"type": "FTP",
+			"name": "ftp_localhost",
+			"ip": "127.0.0.1",
+			"port": 21
+		}, {
+			"type": "SFTP",
+			"name": "sftp_localhost",
+			"ip": "127.0.0.1",
+			"port": 22
+		}, {
+			"type": "SSH",
+			"name": "ssh_localhost",
+			"ip": "127.0.0.1",
+			"port": 22
+		},
+		{
+			"type": "TELNET",
+			"name": "telnet_local",
+			"ip": "127.0.0.1",
+			"port": 23
+		}, {
+			"type": "HTTP",
+			"name": "http_localhost",
+			"ip": "127.0.0.1",
+			"port": 80
+		}, {
+			"type": "RDP",
+			"name": "rdp_localhost",
+			"ip": "127.0.0.1",
+			"port": 3389
+		}, {
+			"type": "HTTP",
+			"name": "openapi",
+			"ip": "100.69.166.91",
+			"port": 26999
+		}
+
+	],
+	"product_key": "AAAAAAAAAAA",
+	"device_name": "BBBBBBBBBBBBBBBBBBBB",
+	"device_secret": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
 }

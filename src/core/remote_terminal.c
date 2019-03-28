@@ -7,6 +7,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "config_manager.h"
 #include "rd_net.h"
@@ -17,8 +18,9 @@
 #include "simple_log.h"
 #include "net_protocol.h"
 #include "session_mgr.h"
+#include "ca.h"
 
-static CFG_STARTUP *g_cfg = NULL;
+CFG_STARTUP *g_cfg = NULL;
 Network_t g_network;
 static int  g_is_running = 1;
 
@@ -41,10 +43,11 @@ static int sda_connect_to_cloud (void)
     char *msg_hdsk = NULL;
     char *msg_hdr = NULL;
     char buf[DEFAULT_MSG_HDR_LEN * 2] = {0};
+    char *certs = load_certs();
 
     rd_net_init(&g_network, RD_NET_WEBSOCKET, g_cfg->is_debug_on == 1 ? 1 : 0,
                     g_cfg->cloud_ip, g_cfg->cloud_port, NULL, 
-                    g_cfg->is_tls_on , g_cfg->cert_path, NULL);
+                    g_cfg->is_tls_on , certs, NULL);
 
     ret = rd_net_connect(&g_network);
     if (0 != ret) {
@@ -53,6 +56,10 @@ static int sda_connect_to_cloud (void)
     }
 
     msg_hdsk = sda_gen_handshake_msg(g_cfg->pk, g_cfg->dn, g_cfg->ds);
+    if(!msg_hdsk){
+        log_error("memory error ");
+        return ret;
+    }
     msg_hdr =  sda_gen_msg_header(MSG_SERVICE_PROVIDER_CONN_REQ, strlen(msg_hdsk), DEFAULT_MSG_ID_HDSK, NULL);
 
     log_info("handshake header:%s", msg_hdr);
@@ -62,25 +69,47 @@ static int sda_connect_to_cloud (void)
     ret = rd_net_write(&g_network, NULL, buf, strlen(buf), 0);
     if (ret <= 0) {
         log_error("write data to cloud failed ");
+        free(msg_hdsk);
         return -1;
     }
 
     log_info("send msg handshake, len:%d ", ret);
-
+    free(msg_hdsk);
     return 0;
 }
 
-static int sda_connect_to_local_service (void)
+static inline int is_service_avalibe(char *type, char *name, char *ip, unsigned int port)
+{
+    struct service_info *p = NULL;
+    int ret = -1;
+    p = g_cfg->service;
+
+    while(p){
+        if(strcmp(type, p->type) == 0 && strcmp(name, p->name) == 0 &&
+                strcmp(ip, p->ip) == 0 && port == p->port){
+            ret = 0; 
+            break;
+        } 
+        p = p->next;
+    }
+    
+    return ret;
+}
+
+static int sda_connect_to_local_service(char *type, char *name, char *ip, unsigned port)
 {
     int ret = 0;
     int socketfd = -1;
 
     struct sockaddr_in server_sshd;
 
+    if(is_service_avalibe(type, name, ip, port) == -1)
+        return -2;
+
     memset(&server_sshd, 0, sizeof(struct sockaddr_in));
     server_sshd.sin_family = PF_INET;
-    server_sshd.sin_port = htons(g_cfg->listen_port);
-    server_sshd.sin_addr.s_addr = inet_addr(g_cfg->listen_ip);
+    server_sshd.sin_port = htons(port);
+    server_sshd.sin_addr.s_addr = inet_addr(ip);
 
     socketfd = socket(PF_INET, SOCK_STREAM, 0);
     if (-1 == socketfd) {
@@ -88,14 +117,58 @@ static int sda_connect_to_local_service (void)
         return -1;
     }
 
+    log_info("start connect to local service");
     ret = connect(socketfd, (struct sockaddr *)&server_sshd, sizeof(server_sshd));
     if (-1 == ret) {
         log_error("connect to failed, %s ", strerror(errno));
         close(socketfd);
+        socketfd = -1;
         return -1;
     }
     log_info("connect to local service succeed, socketfd: %d. ", socketfd);
     return socketfd;
+}
+
+static inline void decode_new_session_payload(char *buf, int buf_len, NewSessionPayload *payload)
+{
+    char *ret = NULL;
+	int len_val = 0;
+	int type_val = 0;
+
+    if(!buf || !payload)
+        return ;
+
+    memset(payload, 0, sizeof(NewSessionPayload));
+    log_debug("new session payload: %s", buf); 
+    //default configure.
+    strncpy(payload->name, "ssh_localhost", sizeof(payload->name) - 1);
+    strncpy(payload->type, "SSH", sizeof(payload->type) - 1);
+    strncpy(payload->ip, "127.0.0.1", sizeof(payload->ip) - 1);
+    payload->port = 22;
+
+    //read from cloud.
+    ret = json_get_value_by_name(buf, buf_len, "service_name", &len_val, &type_val);
+    if(ret && len_val > 0 && type_val == JSTRING){
+        memset(payload->name, 0, sizeof(payload->name));
+        strncpy(payload->name, ret, len_val > sizeof(payload->name) -1 ? sizeof(payload->name) - 1 : len_val);
+    } 
+ 
+    ret = json_get_value_by_name(buf, buf_len, "service_type", &len_val, &type_val);
+    if(ret && len_val > 0 && type_val == JSTRING){
+        memset(payload->type, 0, sizeof(payload->type));
+        strncpy(payload->type, ret, len_val > sizeof(payload->type) -1 ? sizeof(payload->type) - 1 : len_val);
+    } 
+
+    ret = json_get_value_by_name(buf, buf_len, "service_ip", &len_val, &type_val);
+    if(ret && len_val > 0 && type_val == JSTRING){
+        memset(payload->ip, 0, sizeof(payload->ip));
+        strncpy(payload->ip, ret, len_val > sizeof(payload->ip) -1 ? sizeof(payload->ip) - 1 : len_val);
+    } 
+   
+    ret = json_get_value_by_name(buf, buf_len, "service_port", &len_val, &type_val);
+    if(ret && len_val > 0 && type_val == JNUMBER){
+        payload->port = atoi(ret); 
+    } 
 }
 
 static inline int get_msg_header(char *buf, RemoteTerminalMsgHeader *hdr)
@@ -163,6 +236,8 @@ _exit:
     return 0;
 }
 
+
+
 static int is_login_ok(char *buf, int buf_len)
 {
     char *ret = NULL;
@@ -215,14 +290,17 @@ static inline void _add_select_array(int cloudfd, int *localfd_array, int len, f
         FD_SET(cloudfd, rfds);
     }
     for(i = 0; i < len; i++){
-        if(localfd_array[i] >= 0)
+        if(localfd_array[i] >= 0){
             FD_SET(localfd_array[i], rfds);
+            //log_debug("add device fd, i: %d, val: %d\n", i, localfd_array[i]);
+        }
     }
 }
 
 static inline void _del_socketfd_by_index(int index, int *localfd_array, int len)
 {
     if (index < len) {
+        close(localfd_array[index]);
         localfd_array[index] = -1;
     }
 }
@@ -233,6 +311,7 @@ static inline void _del_socketfd_by_id(int fd, int *localfd_array, int len)
     
     for(i = 0; i < len; i++){
         if (fd == localfd_array[i]) {
+            close(localfd_array[i]);
             localfd_array[i] = -1;
         }
     }
@@ -353,7 +432,8 @@ static int _read_msg_hdr(char *buf, int len)
     return i;
 }
 
-#define DEFAULT_MSG_BUFFER_LEN 8*DEFAULT_MSG_HDR_LEN
+//DEFAULT_MSG_BUFFER_LEN: must <= 60K 
+#define DEFAULT_MSG_BUFFER_LEN 40*DEFAULT_MSG_HDR_LEN
 static void _send_error_resp(int code, char *msg, char *msg_id, char *session_id, char *send_buf)
 {
     char *tmp_buf = NULL;
@@ -366,6 +446,21 @@ static void _send_error_resp(int code, char *msg, char *msg_id, char *session_id
     snprintf(send_buf, DEFAULT_MSG_BUFFER_LEN, "%s%s", buf_hdr, tmp_buf); 
     rd_net_write(&g_network, NULL, send_buf, strlen(send_buf), 0);
 }
+
+static void _send_release_session(int code, char *msg, char *msg_id, char *session_id, char *send_buf)
+{
+    char *tmp_buf = NULL;
+    char *buf_hdr = NULL;
+
+    tmp_buf  = sda_gen_payload_msg(code, NULL, msg);
+    buf_hdr = sda_gen_msg_header(MSG_SERVICE_CONSUMER_RELEASE_SESSION, strlen(tmp_buf), msg_id, session_id);
+    
+    memset(send_buf, 0, DEFAULT_MSG_BUFFER_LEN);
+    snprintf(send_buf, DEFAULT_MSG_BUFFER_LEN, "%s%s", buf_hdr, tmp_buf);
+    log_info("release :  %s, token:  %s\n", send_buf, session_id);
+    rd_net_write(&g_network, NULL, send_buf, strlen(send_buf), 0);
+}
+
 
 int sda_run_loop (void)
 {
@@ -406,12 +501,12 @@ int sda_run_loop (void)
         memset(buf, 0, DEFAULT_MSG_BUFFER_LEN);
         if (ret == 0) {
             nopoll_conn_send_ping (g_network.handle);
-            if(++timeout >= 30*60*2){
+            if(++timeout >= 30*60){
                 log_info("there is no package received in 30 min, close current connection...");
                 break;
             } 
         }else if(ret < 0){
-            log_error("failed to select: %s , close current connection", strerror(errno));
+            log_error("failed to select: %s , close current connection, ret:  %d", strerror(errno), ret);
             _send_error_resp(ERR_CONNECTION_CLOSE, "device network error.", NULL, NULL, buf);
             break;
         }
@@ -425,7 +520,6 @@ int sda_run_loop (void)
 				if(token == NULL){
 					log_error("can not find session id for socketfd: %d, close it.", socketfd_local[index]);
 					_del_socketfd_by_index(index, socketfd_local, DEFAULT_SESSION_COUNT);
-					close(socketfd_local[index]);
 					continue;
 				}
 
@@ -440,11 +534,10 @@ int sda_run_loop (void)
 					tmp = rd_net_write(&g_network, NULL, buf, ret + strlen(buf_hdr), 0);
 					log_debug("resend to cloud, len:%d", tmp);
 				} else {
-					log_error("local service exit:  %s ", strerror(errno));
+					log_error("local service exit:  %s , socketfd: %d", strerror(errno), socketfd_local[index]);
+					_send_release_session(ERR_SERVICE_EXIT, "local service exit", NULL, token, buf);
 					free_session(get_session_id_by_socketfd(socketfd_local + index));
 					_del_socketfd_by_index(index, socketfd_local, DEFAULT_SESSION_COUNT);
-					close(socketfd_local[index]);
-					_send_error_resp(ERR_SERVICE_EXIT, "local service exit", NULL, token, buf);
 				}
 			}
 		}
@@ -462,23 +555,33 @@ int sda_run_loop (void)
                 continue;
             }
             if(hdr.msg_type == MSG_SERVICE_CONSUMER_NEW_SESSION){
-                rd_net_read(&g_network, NULL, buf + strlen(buf), hdr.payload_len + 4, 0);//FIXME, deal with service port
+                memset(buf, 0, DEFAULT_MSG_BUFFER_LEN);
+                rd_net_read(&g_network, NULL, buf + strlen(buf), hdr.payload_len + 4, 0);
                 if(0 == is_session_avalibe()){
                     log_error("session is too much...  ");
                     _send_error_resp(ERR_SESSION_LIMIT, "no available session to be allocated", hdr.msg_id, NULL, buf);
                     continue;
                 }
-
-                tmp_fd = sda_connect_to_local_service();
+                NewSessionPayload payload;
+                decode_new_session_payload(buf, hdr.payload_len + 4, &payload);
+                tmp_fd = sda_connect_to_local_service(payload.type, payload.name, payload.ip, payload.port);
                 if(tmp_fd == -1){
                     log_error("failed to connect to local service\n");
                     _send_error_resp(ERR_SERVICE_UNAVALIBE, "local service is not available", hdr.msg_id, NULL, buf);
                     continue;
                 }
+                if(tmp_fd == -2){
+                    log_error("unsupported service. type: %s, name: %s ip: %s port %d\n", payload.type, payload.name, 
+                                            payload.ip, payload.port);
+                    _send_error_resp(ERR_SERVICE_UNAVALIBE, "unsupported service.", hdr.msg_id, NULL, buf);
+                    continue;
+                }
+ 
                 tmp_index = _add_localfd(tmp_fd, socketfd_local, DEFAULT_SESSION_COUNT);
                 if(tmp_index == DEFAULT_SESSION_COUNT){
                     _send_error_resp(ERR_SESSION_CREATE_FAILED, "socketfd insert error", hdr.msg_id, NULL, buf);
                     close(tmp_fd);
+                    tmp_fd = -1;
                     log_error("failed to add socketfd");
                     continue;
                 }
@@ -486,6 +589,7 @@ int sda_run_loop (void)
                 session_id = alloc_new_session(socketfd_local + tmp_index);
                 if(session_id == NULL){
                     close(tmp_fd);
+                    tmp_fd = -1;
                     log_error("failed to alloc new session");
                     _send_error_resp(ERR_SESSION_CREATE_FAILED, "memory error", hdr.msg_id, NULL, buf);
                     continue;
@@ -509,7 +613,6 @@ int sda_run_loop (void)
                     continue; 
                 }
                 _del_socketfd_by_id(_socketfd, socketfd_local, DEFAULT_SESSION_COUNT);
-                close(_socketfd);
 
                 free_session(hdr.token);
 
@@ -548,7 +651,6 @@ int sda_run_loop (void)
                             log_info("resend to local service FAILED, len: %d, payload: %d ", n, payload);
                             free_session(hdr.token);
                             _del_socketfd_by_id(_socketfd, socketfd_local, DEFAULT_SESSION_COUNT);
-                            close(_socketfd);
                             _send_error_resp(ERR_SERVICE_EXIT, "local service exit", hdr.msg_id, hdr.token, buf);
                             break;
                         }
@@ -572,9 +674,11 @@ _exit:
     rd_net_destroy(&g_network);
     _close_all_conn(socketfd_local, DEFAULT_SESSION_COUNT);
 
-    if(buf != NULL)
+    if(buf != NULL){
         free(buf);
-
+        log_info("free network buffer \n"); 
+    }
+    
     return ret;
 }
 
@@ -622,7 +726,6 @@ int main (int argc, char **argv)
         log_info("./remote_terminal <product key>  <device name> <device secret> to startup ");
         return 0;
     }
-  
     if(g_cfg == NULL || !g_cfg->pk || !g_cfg->dn || !g_cfg->ds){
         log_error("failed to init config\n"); 
         return 0;

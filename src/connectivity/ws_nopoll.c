@@ -6,51 +6,22 @@ int ws_nopoll_read(void *handle, char *buffer, int len, int timeout_ms)
     noPollConn *conn = (noPollConn *)handle;
 	int bytes_read = 0;
 
-    #if 1
 	bytes_read = nopoll_conn_read(conn, buffer, len, nopoll_false, 100);
-	#else
-	noPollMsg *msg = NULL;
-	int size = 0;
-
-	msg = nopoll_conn_get_msg(conn);
-	if (NULL != msg) {
-        size = nopoll_msg_get_payload_size(msg);
-        if (size >= len) {
-            size = len - 1;
-        }
-        if (size > 0) {
-            memset(buffer, 0x0, len);
-            memcpy(buffer, nopoll_msg_get_payload(msg), size);
-        }
-	}
-	bytes_read = size;
-	#endif
-	return bytes_read;
+    return bytes_read;
 }
 
 int ws_nopoll_write(void *handle, const char *buffer, int len, int timeout_ms)
 {
     noPollConn *conn = (noPollConn *)handle;
-    int tries = 0;
     int bytes_written = 0;
 
     if ((NULL != buffer) && (len > 0)) {
         bytes_written = nopoll_conn_send_binary (conn, buffer, len);
         if (bytes_written == len) {
-            //log_debug ("send all. ");
             return bytes_written;
         }
-
-        while (tries < 5 && errno == NOPOLL_EWOULDBLOCK 
-          && nopoll_conn_pending_write_bytes (conn) > 0) {
-            nopoll_sleep (10000); 
-            if (0 == nopoll_conn_complete_pending_write (conn)) {
-                log_debug ("send complete. ");
-                return len;
-            }
-            tries++;
-        }
-        log_debug ("send len: %d, try: %d. ", bytes_written, tries);
+        bytes_written = nopoll_conn_flush_writes (conn, 2000000, bytes_written);
+        
         return  bytes_written;
     } else {
         log_debug ("ERROR: content is NULL or len <= 0 ");

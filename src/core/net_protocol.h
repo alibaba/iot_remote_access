@@ -1,9 +1,13 @@
 #ifndef _NET_PROTOCOL_H__
 #define _NET_PROTOCOL_H__
 
+#include "config_manager.h"
+
 #define MSG_HEAD_FMT "{\"msg_type\": %d,\"payload_len\": %d,\"msg_id\": \"%s\",\"timestamp\":%ld,\"token\":\"%s\"}\r\n\r\n"
-#define MSG_HDSK_FMT "{\"uuid\": \"%s\",\"product_key\": \"%s\",\"device_name\": \"%s\",\"version\":\"%s\",\"IP\":\"%s\",\"MAC\":\"%s\",\"token\":\"%s\", \"service_supported\": \"ssh\",\"signmethod\": \"hmacsha256\", \"sign\": \"%s\"}"
+#define MSG_HDSK_FMT "{\"uuid\": \"%s\",\"product_key\": \"%s\",\"device_name\": \"%s\",\"version\":\"%s\",\"IP\":\"%s\",\"MAC\":\"%s\",\"token\":\"\", \"service_meta\": %s,\"signmethod\": \"hmacsha256\", \"sign\": \"%s\"}"
 #define MSG_RESPONSE_FMT "{\"code\": %d, \"message\": \"%s\"}\r\n\r\n%s"
+
+#define VERSION "2.0"
 
 typedef enum{
     MSG_RESP_OK                         = 0,             //消息的response
@@ -48,13 +52,19 @@ typedef struct{
 }RemoteTerminalMsgHeader;
 
 typedef struct{
+    char                 type[DEFAULT_LEN_SERVICE_TYPE];
+    char                 name[DEFAULT_LEN_SERVICE_NAME];
+    char                 ip[16];
+    unsigned             port;
+}NewSessionPayload;
+
+typedef struct{
     char                        uuid[32];
     char                        pk[16];
     char                        dn[32];
     char                        version[16];
     char                        ip[16];         //FIXME
     char                        mac[32];        //FIXME
-    char                        token[32];      //FIXME
     char                        service_supported[32];
     char                        sign_method[32];
     char                        sign[256];

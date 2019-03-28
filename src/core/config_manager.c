@@ -9,15 +9,24 @@ static CFG_STARTUP *g_cfg = NULL;
 
 static void _dump_cfg()
 {
+    struct service_info *p = NULL;
+    int i = 1;
+
 	if(g_cfg == NULL)
 		return;
 
 	log_info("cloud ip: %s", g_cfg->cloud_ip);
 	log_info("cloud port: %s", g_cfg->cloud_port);
-	log_info("cert path: %s", g_cfg->cert_path);
 	log_info("tls switch: %d", g_cfg->is_tls_on);
-	log_info("listen ip: %s", g_cfg->listen_ip);
-	log_info("listen port: %d", g_cfg->listen_port);
+	log_info("support service count: %d", g_cfg->service_count);
+    p = g_cfg->service;
+    while(p){
+        log_info("[%d]: service name: %s",i, p->name);
+        log_info("[%d]: service ip: %s", i, p->ip);
+        log_info("[%d]: service port: %d", i, p->port);
+        p = p->next;
+        i += 1;
+    }
 	if(g_cfg->pk)
 		log_info("product key: %s", g_cfg->pk);
 	if(g_cfg->dn)
@@ -151,6 +160,99 @@ static char *_get_current_work_dir()
 		} \
 }while(0)
 
+static void _add_new_service_info(char *name, char *type, char *ip, unsigned int port)
+{
+    struct service_info *p = NULL;
+    struct service_info *last_item = NULL;
+    struct service_info *new_item = NULL;
+    
+    if(!g_cfg || !name || !ip || port == 0)
+        return;
+
+    p = g_cfg->service;
+
+    while(p){
+        if(strcmp(p->name, name) == 0 && strcmp(p->type, type) == 0 
+                && strcmp(p->ip, ip) == 0 && p->port == port){
+            log_info("repeated items, name: %s, ip: %s, port: %d", name, ip, port); 
+            return;
+        }
+        last_item = p;
+        p = p->next;
+    }
+
+    if(last_item == g_cfg->service && strlen(last_item->name) == 0){
+        last_item->port = port;
+        strncpy(last_item->name, name, sizeof(last_item->name) - 1);
+        strncpy(last_item->type, type, sizeof(last_item->type) - 1);
+        strncpy(last_item->ip, ip, sizeof(last_item->ip) - 1);
+        last_item->next = NULL;
+    } else {
+        new_item = malloc(sizeof(struct service_info));
+        if(new_item == NULL){
+            log_error("failed to alloc memory for store service info."); 
+            exit(1);
+        } 
+        memset(new_item, 0, sizeof(struct service_info));
+        new_item->next = NULL;
+        new_item->port = port;
+        strncpy(new_item->name, name, sizeof(new_item->name) - 1);
+        strncpy(new_item->type, type, sizeof(new_item->type) - 1);
+        strncpy(new_item->ip, ip, sizeof(new_item->ip) - 1);
+
+        last_item->next = new_item;
+    }
+    g_cfg->service_count += 1;
+}
+
+#define GET_SERVICE_INFO(info) do { \
+        char *_name = NULL; \
+        char *_type = NULL; \
+        char *_ip = NULL; \
+        unsigned int _port = 0; \
+        tmp = json_get_value_by_name(info, strlen(info), "name", &len_val, &type_val); \
+    	if(tmp && type_val == JSTRING && len_val > 0) {\
+			_name = strndup(tmp, len_val); \
+			tmp = NULL; \
+        } else { \
+            log_error("failed to read service name from config file"); \
+            exit(1); \
+		} \
+        tmp = json_get_value_by_name(info, strlen(info), "type", &len_val, &type_val); \
+    	if(tmp && type_val == JSTRING && len_val > 0) {\
+			_type = strndup(tmp, len_val); \
+			tmp = NULL; \
+        } else { \
+            log_error("failed to read service type from config file"); \
+            exit(1); \
+		} \
+        tmp = json_get_value_by_name(info, strlen(info), "ip", &len_val, &type_val); \
+    	if(tmp && type_val == JSTRING && len_val > 0) {\
+			_ip = strndup(tmp, len_val); \
+			tmp = NULL; \
+        } else { \
+            log_error("failed to read service ip from config file"); \
+            exit(1); \
+		} \
+        \
+        tmp = json_get_value_by_name(info, strlen(info), "port", &len_val, &type_val); \
+    	if(tmp && type_val == JNUMBER && len_val > 0) {\
+			_port = atoi(tmp); \
+            if(_port > 65535){ \
+                log_error("service port must <= 65535"); \
+                exit(1); \
+            }\
+			tmp = NULL; \
+        } else { \
+            log_error("failed to read service port from config file"); \
+            exit(1); \
+		} \
+        _add_new_service_info(_name, _type, _ip, _port); \
+        free(_name); \
+        free(_type); \
+        free(_ip); \
+}while(0)
+
 CFG_STARTUP *init_cfg(char *pk, char *dn, char *ds)
 {
 	char *working_dir = NULL, *tmp = NULL;
@@ -165,7 +267,7 @@ CFG_STARTUP *init_cfg(char *pk, char *dn, char *ds)
     g_cfg = malloc(sizeof(CFG_STARTUP));
     if(g_cfg == NULL){
         log_error("failed to alloc memory for store configure info."); 
-        return NULL;
+        exit(1);
     }
 
 	working_dir = _get_current_work_dir();
@@ -174,11 +276,38 @@ CFG_STARTUP *init_cfg(char *pk, char *dn, char *ds)
 	
 	GET_STRING_VAL("cloud_ip", &g_cfg->cloud_ip);
 	GET_STRING_VAL("cloud_port", &g_cfg->cloud_port);
-	GET_STRING_VAL("cert_path", &g_cfg->cert_path);
-	GET_STRING_VAL("listen_ip", &g_cfg->listen_ip);
 	GET_INT_VAL("is_tls_on", &g_cfg->is_tls_on);
-	GET_INT_VAL("listen_port", &g_cfg->listen_port);
 	GET_INT_VAL("is_debug_on", &g_cfg->is_debug_on);
+
+    g_cfg->service = malloc(sizeof(struct service_info));
+    if(g_cfg->service == NULL){
+        log_error("failed to alloc memory for store service info."); 
+        exit(1);
+    } 
+    memset(g_cfg->service, 0, sizeof(struct service_info));
+    g_cfg->service->next = NULL;
+    g_cfg->service_count = 0;
+    
+    len_val = 0;
+    type_val = 0;
+    tmp = json_get_value_by_name(cfg_json, strlen(cfg_json), "services", &len_val, &type_val);
+    if(!tmp || type_val != JARRAY || len_val <= 0){
+        log_error("json format error in services field, must be json array type."); 
+        exit(1);
+    }
+    char *list = NULL;
+    char *pos = NULL;
+    char *entry = NULL;
+    list = strndup(tmp, len_val);
+    tmp = NULL;
+    len_val = 0;
+    type_val = 0;
+
+    json_array_for_each_entry(list, pos, entry, len_val, type_val){
+        if(type_val != JOBJECT)
+            continue;
+        GET_SERVICE_INFO(entry);
+    }
 
     if(pk == NULL)
         GET_STRING_VAL("product_key", &g_cfg->pk);
@@ -194,6 +323,8 @@ CFG_STARTUP *init_cfg(char *pk, char *dn, char *ds)
         GET_STRING_VAL("device_secret", &g_cfg->ds);
     else
         g_cfg->ds = strdup(ds);
+  
+    free(list);
     free(working_dir);
 	free(cfg_json);
 
@@ -203,12 +334,13 @@ CFG_STARTUP *init_cfg(char *pk, char *dn, char *ds)
 
 void deinit_cfg()
 {
+    struct service_info  *p = NULL;
+    struct service_info  *tmp = NULL;
 	if(g_cfg == NULL)
 		return;
 
 	free(g_cfg->cloud_ip);
 	free(g_cfg->cloud_port);
-	free(g_cfg->cert_path);
 	if(g_cfg->pk)
 		free(g_cfg->pk);
 	if(g_cfg->dn)
@@ -216,6 +348,12 @@ void deinit_cfg()
 	if(g_cfg->ds)
 		free(g_cfg->ds);
 
+    p = g_cfg->service;
+    while(p){
+        tmp = p->next;
+        free(p);
+        p = tmp;
+    }
     free(g_cfg);
     g_cfg = NULL;
 	log_info("deinit cfg ok.");
