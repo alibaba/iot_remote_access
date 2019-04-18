@@ -65,16 +65,16 @@ RemoteTerminalDaemon_static: 静态库链接版本的可执行程序，可直接
 
 ```shell
 {
-	"cloud_ip": "backend-iotx-remote-debug.aliyun.com",					//连接云端的ip或者url，无需修改。
-	"cloud_port": "443",																		//连接云端的端口，无需修改。
-	"cert_path": "root.pem",																//TSL握手需要的根证书存储路径，无需修改。
-	"is_tls_on": 1,																					//是否支持TLS，默认为1，无需修改。
-	"is_debug_on": 0,																		 //是否打开调试模式，可以填0或者1，调试模式下，有更丰富的打印信息.
+	"cloud_ip": "backend-iotx-remote-debug.aliyun.com",	//连接云端的ip或者url，无需修改。
+	"cloud_port": "443",					//连接云端的端口，无需修改。
+	"cert_path": "root.pem",				//TSL握手需要的根证书存储路径，无需修改。
+	"is_tls_on": 1,						//是否支持TLS，默认为1，无需修改。
+	"is_debug_on": 0,					//是否打开调试模式，可以填0或者1，调试模式下，有更丰富的打印信息.
 	"services": [{
-			"type": "FTP", 																		//远程服务的类型，支持FTP/SSH/SFTP/RDP/ADB/HTTP等常用协议
-			"name": "ftp_localhost",													//用户可以为该服务自定义一个别名，支持最多32个字符，支持utf-8编码的中文
-			"ip": "127.0.0.1",																  //服务的IP地址，如果需要远程访问本地的ip的地址，则填入127.0.0.1，如果是需要远程访问局域网中其他设备的服务，则填其他设备的ip地址，比如192.168.1.138
-			"port": 21																			//服务的实际端口，比如SSH服务，默认为22，比如HTTP端口默认为80等。
+			"type": "FTP", 				//远程服务的类型，支持FTP/SSH/SFTP/RDP/ADB/HTTP等常用协议
+			"name": "ftp_localhost",		//用户可以为该服务自定义一个别名，支持最多32个字符，支持utf-8编码的中文
+			"ip": "127.0.0.1",			//服务的IP地址，如果需要远程访问本地的ip的地址，则填入127.0.0.1，如果是需要远程访问局域网中其他设备的服务，则填其他设备的ip地址，比如192.168.1.138
+			"port": 21				//服务的实际端口，比如SSH服务，默认为22，比如HTTP端口默认为80等。
 		}, {
 			"type": "SFTP",
 			"name": "sftp_localhost",
@@ -109,8 +109,8 @@ RemoteTerminalDaemon_static: 静态库链接版本的可执行程序，可直接
 		}
 
 	],
-	"product_key": "AAAAAAAAAAA",														//阿里云IoT物联网平台上的ProductKey，具体请参考: https://help.aliyun.com/document_detail/73729.html?spm=a2c4g.11174283.6.584.5fd91668DmxBzt 
-	"device_name": "BBBBBBBBBBBBBBBBBBBB",										//阿里云IoT物联网平台上的DeviceName
+	"product_key": "AAAAAAAAAAA",		            //阿里云IoT物联网平台上的ProductKey，具体请[参考](https://help.aliyun.com/document_detail/73729.html?spm=a2c4g.11174283.6.584.5fd91668DmxBzt)
+	"device_name": "BBBBBBBBBBBBBBBBBBBB",	                  //阿里云IoT物联网平台上的DeviceName
 	"device_secret": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"        //阿里云IoT物联网平台上的DeviceSecret
 }
 
