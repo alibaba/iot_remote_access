@@ -9,6 +9,7 @@
 * Android ADB不再局限于局域网调试.
 * 免费，开源，稳定，安全的远程运维神器。
 * 技术及产品架构介绍，请浏览 [WIKI](https://github.com/alibaba/iot_remote_access/wiki)
+* 支持从云端控制台上手动开启/关闭运维通道，控制协议详见: [云端控制协议](https://github.com/alibaba/iot_remote_access/blob/master/docs/protocol-cloud.md)
 ## 编译
 
 ### 编译CentOS版本
@@ -130,7 +131,7 @@ RemoteTerminalDaemon_static: 静态库链接版本的可执行程序，可直接
 直接运行，后面跟上设备三要素即可。
 ```
 
-**注意**: 必须把board/xxx/prebuilt下面所有的.so，顶层目录的root.pem，顶层目录的remote_terminal.json及RemoteTerminalDaemon同时安装在设备上
+**注意**: 必须把board/xxx/prebuilt下面所有的.so，顶层目录的remote_terminal.json及RemoteTerminalDaemon同时安装在设备上
 才能运行成功。
 
 PS: 如有任何问题，请钉钉扫描咨询。
