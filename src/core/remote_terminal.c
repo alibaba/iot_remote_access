@@ -500,11 +500,15 @@ int sda_run_loop (void)
 
         memset(buf, 0, DEFAULT_MSG_BUFFER_LEN);
         if (ret == 0) {
-            nopoll_conn_send_ping (g_network.handle);
-            if(++timeout >= 30*60){
+            if(++timeout >= 30*60*2){
                 log_info("there is no package received in 30 min, close current connection...");
                 break;
+
             } 
+
+            if(0 == (timeout % (80 * 2) ))  // ping per 80s
+                nopoll_conn_send_ping (g_network.handle);
+
         }else if(ret < 0){
             log_error("failed to select: %s , close current connection, ret:  %d", strerror(errno), ret);
             _send_error_resp(ERR_CONNECTION_CLOSE, "device network error.", NULL, NULL, buf);
