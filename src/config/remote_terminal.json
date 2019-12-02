@@ -1,0 +1,48 @@
+{
+    "cloud_ip": "backend-iotx-remote-debug.aliyun.com",
+    "cloud_port": "443",
+    "is_tls_on": 1,
+    "is_debug_on": 0,
+    "services": [{
+            "type": "FTP",
+            "name": "ftp_localhost",
+            "ip": "127.0.0.1",
+            "port": 21
+        }, {
+            "type": "SFTP",
+            "name": "sftp_localhost",
+            "ip": "127.0.0.1",
+            "port": 22
+        }, {
+            "type": "SSH",
+            "name": "ssh_localhost",
+            "ip": "127.0.0.1",
+            "port": 22
+        },
+        {
+            "type": "TELNET",
+            "name": "telnet_local",
+            "ip": "127.0.0.1",
+            "port": 23
+        }, {
+            "type": "HTTP",
+            "name": "http_localhost",
+            "ip": "127.0.0.1",
+            "port": 80
+        }, {
+            "type": "RDP",
+            "name": "rdp_localhost",
+            "ip": "127.0.0.1",
+            "port": 3389
+        }, {
+            "type": "HTTP",
+            "name": "openapi",
+            "ip": "100.69.166.91",
+            "port": 26999
+        }
+
+    ],
+    "product_key": "此处填写pk值",
+    "device_name": "此处填写dn值",
+    "device_secret": "此处填写ds值"
+}

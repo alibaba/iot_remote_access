@@ -44,6 +44,10 @@ static int sda_connect_to_cloud (void)
     char *msg_hdr = NULL;
     char buf[DEFAULT_MSG_HDR_LEN * 2] = {0};
     char *certs = load_certs();
+    
+    if(NULL == certs){
+        return -1;
+    }
 
     rd_net_init(&g_network, RD_NET_WEBSOCKET, g_cfg->is_debug_on == 1 ? 1 : 0,
                     g_cfg->cloud_ip, g_cfg->cloud_port, NULL, 

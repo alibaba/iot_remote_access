@@ -35,7 +35,10 @@ char *load_certs()
     int ret = 0;
 
     fp = fopen(DEFAULT_ROOT_PEM_NAEM, "w+");
-
+    if(NULL == fp){
+        log_error("failed to open file \n");
+        return NULL;
+    }
     ret = fwrite(remote_debug_cert, 1, strlen(remote_debug_cert), fp);
     if(ret != strlen(remote_debug_cert)){
         fclose(fp);

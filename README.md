@@ -53,13 +53,14 @@ _NewBoardName:                  新的平台的名称，比如armv8等。
 
 ### 生成物介绍
 
-```
-RemoteTerminalDaemon: 动态链接库版本的可执行程序，运行需要将nopoll和openssl库放到系统库里或者手动指定LD_LIBRARY_PATH.
-RemoteTerminalDaemon_static: 静态库链接版本的可执行程序，可直接运行. 
-```
+编译完成后,在当前目录下生成"build"文件夹, 其中包含可执行文件和依赖库等.其中:
 
-## 运行
-两种运行方式的差异在于设备三元组在配置文件里面传递还是通过命令行参数传递。
+```
+RemoteTerminalDaemon_dynamic: 动态链接库版本的可执行程序，运行需要将nopoll和openssl库放到系统库里或者手动指定LD_LIBRARY_PATH.
+RemoteTerminalDaemon_static:  静态库链接版本的可执行程序，可直接运行. 
+start_for_dynamic.sh:         启动RemoteTerminalDaemon_dynamic 的shell脚本(依赖环境已经配置好)
+remote_terminal.json:         配置文件,下面有具体的说明
+```
 ### 配置文件方式
 
 * 配置文件说明
@@ -68,7 +69,6 @@ RemoteTerminalDaemon_static: 静态库链接版本的可执行程序，可直接
 {
 	"cloud_ip": "backend-iotx-remote-debug.aliyun.com",	//连接云端的ip或者url，无需修改。
 	"cloud_port": "443",					//连接云端的端口，无需修改。
-	"cert_path": "root.pem",				//TSL握手需要的根证书存储路径，无需修改。
 	"is_tls_on": 1,						//是否支持TLS，默认为1，无需修改。
 	"is_debug_on": 0,					//是否打开调试模式，可以填0或者1，调试模式下，有更丰富的打印信息.
 	"services": [{
@@ -110,29 +110,30 @@ RemoteTerminalDaemon_static: 静态库链接版本的可执行程序，可直接
 		}
 
 	],
-	"product_key": "AAAAAAAAAAA",		            //阿里云IoT物联网平台上的ProductKey，具体请[参考](https://help.aliyun.com/document_detail/73729.html?spm=a2c4g.11174283.6.584.5fd91668DmxBzt)
-	"device_name": "BBBBBBBBBBBBBBBBBBBB",	                  //阿里云IoT物联网平台上的DeviceName
-	"device_secret": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"        //阿里云IoT物联网平台上的DeviceSecret
+    "product_key":   "此处填写pk值",    //阿里云IoT物联网平台上的ProductKey，具体请[参考](https://help.aliyun.com/document_detail/73729.html?spm=a2c4g.11174283.6.584.5fd91668DmxBzt)
+    "device_name":   "此处填写dn值",   //阿里云IoT物联网平台上的DeviceName
+    "device_secret": "此处填写ds值"    //阿里云IoT物联网平台上的DeviceSecret
 }
 
 ```
-* 修改配置文件里的product_key, device_name, device_secret三项.
 
-* 运行
+### 运行
+
+
+* 静态链接的可执行文件的运行
 
 ```shell
-./RemoteTerminalDaemon_static
+cd ./build/bin
+./RemoteTerminalDaemon_static <product_key> <device_name> <device_secret> //若在配置文件中已经填写了product_key,device_name,device_secret 则此处无需重复填写
 ```
 
-### 命令行方式 
+
+* 动态链接的可执行文件的运行
+
 ```shell
-./RemoteTerminalDaemon_static ProductKey DeviceName DeviceSecret
-
-直接运行，后面跟上设备三要素即可。
+cd ./build/bin
+./start_for_dynamic.sh <product_key> <device_name> <device_secret> //若在配置文件中已经填写了product_key,device_name,device_secret 则此处无需重复填写
 ```
-
-**注意**: 必须把board/xxx/prebuilt下面所有的.so，顶层目录的remote_terminal.json及RemoteTerminalDaemon同时安装在设备上
-才能运行成功。
 
 PS: 如有任何问题，请钉钉扫描咨询。
 
